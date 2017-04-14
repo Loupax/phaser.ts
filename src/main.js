@@ -11,3 +11,6 @@ class SimpleGame {
         logo.anchor.setTo(0.5, 0.5);
     }
 }
+window.onload = () => {
+    var game = new SimpleGame();
+};

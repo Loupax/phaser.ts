@@ -6,13 +6,19 @@ var tsify = require('tsify');
 var sourcemaps = require('gulp-sourcemaps');
 var buffer = require('vinyl-buffer');
 var uglify = require('gulp-uglify');
+var open = require('gulp-open');
 
 gulp.task('copyHtml', function () {
     return gulp.src(['src/*.html'])
         .pipe(gulp.dest('dist'));
 });
 
-gulp.task('default', ['copyHtml'], function () {
+gulp.task('open',['copyHtml'], function(){
+    gulp.src('./dist/index.html')
+        .pipe(open());
+});
+
+gulp.task('compile', function () {
     return browserify({
         basedir: '.',
         debug: true,
