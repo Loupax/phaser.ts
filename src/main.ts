@@ -1,5 +1,3 @@
-import * as Phaser from 'phaser';
-
 class SimpleGame {
 
     constructor() {
@@ -9,7 +7,7 @@ class SimpleGame {
     game: Phaser.Game;
 
     preload() {
-        this.game.load.image('logo', 'phaser2.png');
+        this.game.load.image('logo', 'img/phaser.png');
     }
 
     create() {
