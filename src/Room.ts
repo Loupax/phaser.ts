@@ -4,6 +4,7 @@ import Point = Phaser.Point;
 export default class Room extends Phaser.State{
     roomLayer: Phaser.TilemapLayer;
     hero: Phaser.Sprite;
+    girl: Phaser.Sprite;
 
     preload() {
         console.log('Preload');
@@ -21,30 +22,42 @@ export default class Room extends Phaser.State{
         tv.width = 320;
         tv.height = 320;
         const hero = this.getHero();
-        const girl = this.add.sprite(4, 589, 'sprites', 'square_girl_0');
+        const girl = this.girl = this.add.sprite(4, 589, 'sprites', 'square_girl_0');
         girl.inputEnabled = true;
-        girl.events.onInputDown.add(this.handleObjectClick);
+        girl.anchor.x = girl.anchor.y = 0.5;
+        girl.events.onInputDown.add(this.handleObjectClick, this);
         this.setUpHeroPhysics(girl);
-        girl.width = girl.height = 50;
+        girl.width = girl.height = 150;
 
         this.stage.backgroundColor = "#4488AA";
         this.physics.startSystem(Phaser.Physics.ARCADE);
         this.physics.arcade.gravity.y = 500;
         this.setUpHeroPhysics(hero);
 
-        bg.events.onInputDown.add(this.walk, this.hero);
+        bg.events.onInputDown.add(this.walk, this);
 
         //this.enableEditor();
     }
 
-    private handleObjectClick(sprite:Phaser.Sprite, pointer: Phaser.Pointer){
-        //console.log('Object click', arguments);
+    private walkSpriteTowardsPoint(sprite: Phaser.Sprite, point: Phaser.Point){
+        const xDistance = Math.abs(sprite.x - point.x);
+        const duration:number = (Math.abs(xDistance)/200) * 1000;
+
+        if(sprite.x - point.x > 0){
+            sprite.scale.x = -Math.abs(sprite.scale.x);
+
+        } else{
+            sprite.scale.x = Math.abs(sprite.scale.x);
+        }
+        this.game.add.tween(sprite).to( { x: point.x }, duration).start();
     }
 
-    private walk(this:Phaser.Sprite, stage:Phaser.Sprite, pointer: Phaser.Pointer){
-        const distance = Phaser.Point.distance(this, pointer);
-        const duration:number = (Math.abs(distance)/200) * 1000;
-        pointer.game.add.tween(this).to( { x: pointer.position.x - this.width/2 }, duration).start();
+    private handleObjectClick(sprite:Phaser.Sprite, pointer: Phaser.Pointer){
+        this.walkSpriteTowardsPoint(this.hero, new Point(sprite.position.x + sprite.width + 10, sprite.position.y));
+    }
+
+    private walk(stage:Phaser.Sprite, pointer: Phaser.Pointer){
+        this.walkSpriteTowardsPoint(this.hero, pointer.position);
     }
 
     private getBookcase():Phaser.Sprite{
@@ -81,46 +94,19 @@ export default class Room extends Phaser.State{
     update(){}
 
     render(){
-        //this.game.debug.body(this.getHero());
+        //this.game.debug.body(this.girl);
+        //this.game.debug.body(this.hero);
         //this.game.debug.bodyInfo(this.getHero(),0,0);
         //this.game.debug.body(this.getRoomLayer());
     }
 
-    private getRoomLayer(): Phaser.TilemapLayer {
-        if (this.roomLayer === undefined) {
-            let roomData = [
-                `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1`,
-                `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
-            ].join('\n');
-
-            this.cache.addTilemap('roomMap', null, roomData, Phaser.Tilemap.CSV);
-
-            const map = this.add.tilemap('roomMap',16, 16);
-            const bmd = this.add.bitmapData(32,16);
-            bmd.context.fillRect(16,0,16,16);
-            map.addTilesetImage('sci_fi_tiles', bmd, 16, 16);
-            map.setCollision(1);
-            const layer = this.roomLayer = map.createLayer(0);
-            layer.name = 'layer';
-        }
-        return this.roomLayer;
-    }
-
     private getHero(): Phaser.Sprite {
         if (this.hero === undefined) {
-            const hero = this.hero = this.add.sprite(112, 0, 'sprites', 'blue_square_guy_0');
-            hero.width = hero.height = 50;
+            const hero = this.hero = this.add.sprite(250, 0, 'sprites', 'blue_square_guy_0');
+            hero.width = hero.height = 150;
             hero.name = 'hero';
+            hero.anchor.x = 0.5;
+            hero.anchor.y = 0.5;
         }
         return this.hero;
     }
