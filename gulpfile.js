@@ -1,15 +1,20 @@
 'use strict';
-var gulp = require('gulp');
-var browserify = require('browserify');
-var source = require('vinyl-source-stream');
-var tsify = require('tsify');
-var sourcemaps = require('gulp-sourcemaps');
-var buffer = require('vinyl-buffer');
-var uglify = require('gulp-uglify');
-var open = require('gulp-open');
-var concat = require('gulp-concat');
-var gulpMerge = require('gulp-merge');
-var connect = require('gulp-connect');
+const gulp = require('gulp');
+const browserify = require('browserify');
+const source = require('vinyl-source-stream');
+const tsify = require('tsify');
+const sourcemaps = require('gulp-sourcemaps');
+const buffer = require('vinyl-buffer');
+const uglify = require('gulp-uglify');
+const open = require('gulp-open');
+const concat = require('gulp-concat');
+const gulpMerge = require('gulp-merge');
+const connect = require('gulp-connect');
+const spritesmith = require('gulp.spritesmith');
+const imagemin = require('gulp-imagemin');
+const texturepacker = require('spritesmith-texturepacker');
+
+const locations = {images: ['src/**/*.png']};
 
 gulp.task('server', function () {
     connect.server({
@@ -18,23 +23,33 @@ gulp.task('server', function () {
     });
 });
 
+gulp.task('sprites',function () {
+    const spriteData = gulp.src(locations.images).pipe(spritesmith({
+        imgName: 'sprite.png',
+        cssName: 'sprite.json',
+        algorithm: 'binary-tree',
+        cssTemplate: texturepacker
+    }));
+    return spriteData.pipe(gulp.dest('dist/img'));
+});
 gulp.task('watch', function () {
     gulp.watch('./src/**/*.ts', ['compile']);
+    gulp.watch(locations.images, ['sprites']);
 });
 
-gulp.task('default', ['server', 'compile', 'watch', 'open']);
+gulp.task('default', ['server', 'compile', 'watch']);
 
 gulp.task('copyAssets', function () {
-    return gulp.src(['src/*.html', 'src/**/*.png'])
+    return gulp.src(['src/*.html'])
         .pipe(gulp.dest('dist'));
 });
 
 gulp.task('open', ['copyAssets'], function () {
-    gulp.src('game.dev')
+    gulp.src('localhost:8080')
         .pipe(open());
 });
 
-gulp.task('compile', ['copyAssets'], function () {
+gulp.task('compile', ['copyAssets', 'sprites'], function () {
     return gulpMerge(phaser(), ts_compile())
         .pipe(sourcemaps.init({loadMaps: true}))
         //.pipe(uglify())

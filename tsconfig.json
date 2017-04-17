@@ -1,6 +1,7 @@
 {
   "files": [
-    "src/main.ts",
+    "src/Game.ts",
+    "src/Room.ts",
     "node_modules/phaser/typescript/phaser.d.ts"
   ],
   "compilerOptions": {
