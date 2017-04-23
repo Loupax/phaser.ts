@@ -3,11 +3,14 @@ import Humanoid from './Humanoid';
 import Point = Phaser.Point;
 import SpriteFactory from "./SpriteFactory";
 
+type wallSpriteClickHandler = [Phaser.Sprite, ()=>void];
 export default class Room extends Phaser.State {
 
     walkingTween: Phaser.Tween;
     hero: Humanoid;
     audio: Phaser.AudioSprite;
+    wallSpriteClickHandlers: Array<wallSpriteClickHandler>;
+    activeWallSprite: Phaser.Sprite;
 
     preload() {
         this.load.atlasJSONHash('sprites', 'img/sprite.png', 'img/sprite.json');
@@ -23,8 +26,8 @@ export default class Room extends Phaser.State {
         const pizza = factory.pizza(0, 0);
         const bookcase = factory.bookcase(320, 0);
         const tv = factory.tv(320, 320);
-        this.hero = factory.hero(250, 0);
         const girl = factory.girl(4, 589);
+        this.hero = factory.hero(250, 589);
 
 
         this.physics.startSystem(Phaser.Physics.ARCADE);
@@ -37,11 +40,20 @@ export default class Room extends Phaser.State {
             sprite.inputEnabled = true;
             sprite.events.onInputDown.add(room.handleWallSpriteClick, room);
         });
+        this.wallSpriteClickHandlers = [
+            [tv, ():void=>{console.log('Watch TV');}],
+            [pizza, ():void=>{console.log('Eat junkfood');}],
+            [bookcase, ():void=>{console.log('Read a motherfucking book');}]
+        ];
     }
 
     update() {
         if (this.hero.justTouchedTheFloor()) {
             this.audio.play('land');
+        }
+
+        if(this.hero.isJumping() && this.hero.justReachedJumpPeak()){
+            this.runWallSpriteClickHandler();
         }
     }
 
@@ -52,7 +64,17 @@ export default class Room extends Phaser.State {
         //this.game.debug.body(this.getRoomLayer());
     }
 
+    private runWallSpriteClickHandler():void{
+        this.wallSpriteClickHandlers.filter((tuple: wallSpriteClickHandler):boolean=>{
+            return tuple[0] === this.activeWallSprite;
+        }).pop()[1]();
+    }
+
     private handleWallSpriteClick(this: Room, wallSprite: Phaser.Sprite) {
+        if (!this.hero.body.onFloor()) {
+            return;
+        }
+        this.activeWallSprite = wallSprite;
         const hero = this.hero;
         const audio = this.audio;
         this.cancelWalkingTween();
@@ -67,8 +89,10 @@ export default class Room extends Phaser.State {
         if (wallSprite.position.y === 0) {
             this.walkingTween.onComplete.add(() => {
                 audio.play('jump');
-                hero.body.velocity.y = -650;
+                hero.jump();
             });
+        } else {
+            this.runWallSpriteClickHandler();
         }
     }
 

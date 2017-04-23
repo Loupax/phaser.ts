@@ -15,7 +15,7 @@ const imagemin = require('gulp-imagemin');
 const texturepacker = require('spritesmith-texturepacker');
 const audiosprite = require('gulp-audiosprite');
 
-const locations = {images: ['src/**/*.png'], sounds: ['src/**/*.wav']};
+const locations = {images: ['src/**/*.png'], sounds: ['src/**/*.wav'], html: ['src/**/*.html']};
 
 gulp.task('server', function () {
     connect.server({
@@ -24,7 +24,7 @@ gulp.task('server', function () {
     });
 });
 
-gulp.task('sprites',function () {
+gulp.task('sprites', function () {
     const spriteData = gulp.src(locations.images).pipe(spritesmith({
         imgName: 'sprite.png',
         cssName: 'sprite.json',
@@ -36,22 +36,23 @@ gulp.task('sprites',function () {
 gulp.task('watch', function () {
     gulp.watch('./src/**/*.ts', ['compile']);
     gulp.watch(locations.images, ['sprites']);
-    gulp.watch(locations.sounds, ['audiosprite'])
+    gulp.watch(locations.sounds, ['audiosprite']);
+    gulp.watch(locations.html, ['html'])
 });
 
-gulp.task('default', ['server', 'compile', 'watch']);
+gulp.task('default', ['server', 'compile', 'sprites', 'audiosprite', 'html', 'watch']);
 
-gulp.task('copyAssets', function () {
+gulp.task('html', function () {
     return gulp.src(['src/*.html'])
         .pipe(gulp.dest('dist'));
 });
 
-gulp.task('open', ['copyAssets'], function () {
+gulp.task('open', function () {
     gulp.src('localhost:8080')
         .pipe(open());
 });
 
-gulp.task('compile', ['copyAssets', 'sprites', 'audiosprite'], function () {
+gulp.task('compile', function () {
     return gulpMerge(phaser(), ts_compile())
         .pipe(sourcemaps.init({loadMaps: true}))
         //.pipe(uglify())
@@ -60,7 +61,9 @@ gulp.task('compile', ['copyAssets', 'sprites', 'audiosprite'], function () {
         .pipe(gulp.dest('dist'));
 });
 
-gulp.task('audiosprite', function() {
+gulp.task('build', ['html', 'sprites', 'audiosprite', 'compile']);
+
+gulp.task('audiosprite', function () {
     gulp.src('./src/snd/*.wav')
         .pipe(audiosprite({
             format: 'jukebox',

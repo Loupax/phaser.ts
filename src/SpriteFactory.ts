@@ -12,8 +12,8 @@ export default class SpriteFactory {
 
         hero.width = hero.height = 150;
 
-        hero.anchor.x = 0.5;
-        hero.anchor.y = 0.5;
+        hero.anchor.set(0.5)
+
 
         hero.animations.add('idle', ['blue_square_guy_0', 'blue_square_guy_1'], 0.5, true);
         hero.animations.add('walk', ['blue_square_guy_0', 'blue_square_guy_1'], 8, true);
@@ -25,7 +25,7 @@ export default class SpriteFactory {
     girl(x: number, y: number): Humanoid {
         const girl = new Humanoid(this.game, x, y, 'sprites', 'square_girl_0');
         girl.inputEnabled = true;
-        girl.anchor.x = girl.anchor.y = 0.5;
+        girl.anchor.set(0.5);
         girl.width = girl.height = 150;
         this.game.add.existing(girl);
         this.setUpHeroPhysics(girl);
