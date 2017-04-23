@@ -19,10 +19,7 @@ export default class Room extends Phaser.State {
         this.audio = this.add.audioSprite('sfx');
         const factory = new SpriteFactory(this.game);
         const room = this;
-
         const bg = factory.transparentBg();
-
-
         const pizza = factory.pizza(0, 0);
         const bookcase = factory.bookcase(320, 0);
         const tv = factory.tv(320, 320);
@@ -34,8 +31,8 @@ export default class Room extends Phaser.State {
         this.physics.arcade.gravity.y = 500;
 
 
+        girl.events.onInputDown.add(this.handleActorClick, this);
         bg.events.onInputDown.add(this.walk, this);
-
         [pizza, tv, bookcase].forEach((sprite: Phaser.Sprite) => {
             sprite.inputEnabled = true;
             sprite.events.onInputDown.add(room.handleWallSpriteClick, room);
