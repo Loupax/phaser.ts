@@ -1,40 +1,38 @@
 import * as Phaser from 'phaser';
+import Humanoid from './Humanoid';
 import Point = Phaser.Point;
+import SpriteFactory from "./SpriteFactory";
 
 export default class Room extends Phaser.State {
 
     walkingTween: Phaser.Tween;
-    hero: Phaser.Sprite;
-    girl: Phaser.Sprite;
+    hero: Humanoid;
+    audio: Phaser.AudioSprite;
 
     preload() {
         this.load.atlasJSONHash('sprites', 'img/sprite.png', 'img/sprite.json');
+        this.load.audiosprite('sfx', ['snd/sprite.ogg', 'snd/sprite.m4a', 'snd/sprite.ac3', 'snd/sprite.mp4'], 'snd/sprite.json');
     }
 
     create() {
-        const room = this;
-        const bg = this.add.sprite(0, 0, this.add.bitmapData(this.game.width, this.game.height));
-        bg.inputEnabled = true;
-
-        const pizza = this.add.sprite(0, 0, 'sprites', 'framed_pizza');
-        pizza.width = pizza.height = 320;
-
-        const bookcase = this.getBookcase();
-        const tv = this.add.sprite(320, 320, 'sprites', 'square_tv_screen');
-        tv.width = 320;
-        tv.height = 320;
-        const hero = this.getHero();
-        const girl = this.girl = this.add.sprite(4, 589, 'sprites', 'square_girl_0');
-        girl.inputEnabled = true;
-        girl.anchor.x = girl.anchor.y = 0.5;
-        girl.events.onInputDown.add(this.handleActorClick, this);
-        this.setUpHeroPhysics(girl);
-        girl.width = girl.height = 150;
-
         this.stage.backgroundColor = "#4488AA";
+        this.audio = this.add.audioSprite('sfx');
+        const factory = new SpriteFactory(this.game);
+        const room = this;
+
+        const bg = factory.transparentBg();
+
+
+        const pizza = factory.pizza(0, 0);
+        const bookcase = factory.bookcase(320, 0);
+        const tv = factory.tv(320, 320);
+        this.hero = factory.hero(250, 0);
+        const girl = factory.girl(4, 589);
+
+
         this.physics.startSystem(Phaser.Physics.ARCADE);
         this.physics.arcade.gravity.y = 500;
-        this.setUpHeroPhysics(hero);
+
 
         bg.events.onInputDown.add(this.walk, this);
 
@@ -44,26 +42,37 @@ export default class Room extends Phaser.State {
         });
     }
 
-    private handleWallSpriteClick(this: Room, wallSprite: Phaser.Sprite) {
-        const hero = this.hero;
-        this.cancelWalkingTween();
-
-        this.game.debug.spriteBounds(wallSprite);
-        this.walkingTween = this.walkSpriteTowardsPoint(this.hero, new Point(wallSprite.position.x + wallSprite.width / 2, wallSprite.position.y));
-        this.walkingTween.start();
-        if (wallSprite.position.y === 0) {
-            this.walkingTween.onComplete.add(() => {
-                hero.body.velocity.y = -1000;
-            });
+    update() {
+        if (this.hero.justTouchedTheFloor()) {
+            this.audio.play('land');
         }
     }
 
-    private jumpSpriteTowardsPoint(sprite: Phaser.Sprite, point: Phaser.Point): Phaser.Tween {
-        const yDiff = sprite.y - point.y;
-        const yDistance = Math.abs(yDiff);
-        const duration: number = (yDistance / 200) * 500;
+    render() {
+        //this.game.debug.body(this.girl);
+        //this.game.debug.body(this.hero);
+        //this.game.debug.bodyInfo(this.getHero(),0,0);
+        //this.game.debug.body(this.getRoomLayer());
+    }
 
-        return this.game.add.tween(sprite).to({y: point.y}, duration);
+    private handleWallSpriteClick(this: Room, wallSprite: Phaser.Sprite) {
+        const hero = this.hero;
+        const audio = this.audio;
+        this.cancelWalkingTween();
+
+        this.game.debug.spriteBounds(wallSprite);
+        this.walkingTween = this.walkSpriteTowardsPoint(
+            this.hero,
+            new Point(wallSprite.position.x + wallSprite.width / 2, wallSprite.position.y)
+        );
+
+        this.walkingTween.start();
+        if (wallSprite.position.y === 0) {
+            this.walkingTween.onComplete.add(() => {
+                audio.play('jump');
+                hero.body.velocity.y = -650;
+            });
+        }
     }
 
     private walkSpriteTowardsPoint(sprite: Phaser.Sprite, point: Phaser.Point): Phaser.Tween {
@@ -109,13 +118,6 @@ export default class Room extends Phaser.State {
         }
     }
 
-    private getBookcase(): Phaser.Sprite {
-        const bookcase = this.add.sprite(320, 0, 'sprites', 'bookcase_square');
-        bookcase.name = 'bookcase';
-        bookcase.width = 320;
-        bookcase.height = 320;
-        return bookcase;
-    }
 
     private enableEditor() {
         const changes: { [name: string]: Point; } = {};
@@ -134,37 +136,5 @@ export default class Room extends Phaser.State {
             changes[sprite.name] = sprite.position;
             console.log(changes);
         }
-    }
-
-    private setUpHeroPhysics(hero: Phaser.Sprite): void {
-        this.physics.enable(hero);
-        hero.body.collideWorldBounds = true;
-        hero.body.bounce.y = 0.3;
-    }
-
-    update() {
-    }
-
-    render() {
-        //this.game.debug.body(this.girl);
-        //this.game.debug.body(this.hero);
-        //this.game.debug.bodyInfo(this.getHero(),0,0);
-        //this.game.debug.body(this.getRoomLayer());
-    }
-
-    private getHero(): Phaser.Sprite {
-        if (this.hero === undefined) {
-            const hero = this.hero = this.add.sprite(250, 0, 'sprites', 'blue_square_guy_0');
-            hero.name = 'hero';
-
-            hero.width = hero.height = 150;
-
-            hero.anchor.x = 0.5;
-            hero.anchor.y = 0.5;
-
-            hero.animations.add('idle', ['blue_square_guy_0', 'blue_square_guy_1'], 0.5, true);
-            hero.animations.add('walk', ['blue_square_guy_0', 'blue_square_guy_1'], 8, true);
-        }
-        return this.hero;
     }
 }

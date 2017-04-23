@@ -29,6 +29,7 @@
     "browserify-shim": "^3.8.14",
     "gulp": "^3.9.1",
     "gulp-add-src": "^0.2.0",
+    "gulp-audiosprite": "^1.0.3",
     "gulp-concat": "^2.6.1",
     "gulp-connect": "^5.0.0",
     "gulp-imagemin": "^3.2.0",
@@ -46,9 +47,7 @@
     "typescript": "^2.2.2",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
-    "watchify": "^3.9.0"
-  },
-  "dependencies": {
+    "watchify": "^3.9.0",
     "phaser": "^2.6.2"
   }
 }

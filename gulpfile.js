@@ -13,8 +13,9 @@ const connect = require('gulp-connect');
 const spritesmith = require('gulp.spritesmith');
 const imagemin = require('gulp-imagemin');
 const texturepacker = require('spritesmith-texturepacker');
+const audiosprite = require('gulp-audiosprite');
 
-const locations = {images: ['src/**/*.png']};
+const locations = {images: ['src/**/*.png'], sounds: ['src/**/*.wav']};
 
 gulp.task('server', function () {
     connect.server({
@@ -35,6 +36,7 @@ gulp.task('sprites',function () {
 gulp.task('watch', function () {
     gulp.watch('./src/**/*.ts', ['compile']);
     gulp.watch(locations.images, ['sprites']);
+    gulp.watch(locations.sounds, ['audiosprite'])
 });
 
 gulp.task('default', ['server', 'compile', 'watch']);
@@ -49,13 +51,22 @@ gulp.task('open', ['copyAssets'], function () {
         .pipe(open());
 });
 
-gulp.task('compile', ['copyAssets', 'sprites'], function () {
+gulp.task('compile', ['copyAssets', 'sprites', 'audiosprite'], function () {
     return gulpMerge(phaser(), ts_compile())
         .pipe(sourcemaps.init({loadMaps: true}))
         //.pipe(uglify())
         .pipe(concat('bundle.js'))
         .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest('dist'));
+});
+
+gulp.task('audiosprite', function() {
+    gulp.src('./src/snd/*.wav')
+        .pipe(audiosprite({
+            format: 'jukebox',
+            export: "mp3,m4a,ac3,4xm,ogg"//"ogg,m4a,mp3,ac3"
+        }))
+        .pipe(gulp.dest('dist/snd'));
 });
 
 function ts_compile() {

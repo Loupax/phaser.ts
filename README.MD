@@ -9,4 +9,12 @@ How to run for the first time:
 npm install && gulp
 ```
 
-After that, just `gulp` will do
+For gulp-audiosprite you'll also need ffmpeg:
+
+
+```
+brew install ffmpeg --with-theora --with-libogg --with-libvorbis
+```
+
+
+After that, just `gulp` will compile everything and serve the game
