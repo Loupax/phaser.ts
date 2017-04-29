@@ -20,7 +20,7 @@ export default class Humanoid extends Phaser.Sprite implements AffectedByGravity
     }
 
     jump(){
-        this.body.velocity.y = -650;
+        this.body.velocity.y = -2000;
         this._isJumping = true;
     }
 

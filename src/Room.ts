@@ -31,7 +31,7 @@ export default class Room extends Phaser.State {
 
 
         this.physics.startSystem(Phaser.Physics.ARCADE);
-        this.physics.arcade.gravity.y = 500;
+        this.physics.arcade.gravity.y = 2000;
 
 
         girl.events.onInputDown.add(this.handleActorClick, this);
@@ -43,7 +43,7 @@ export default class Room extends Phaser.State {
         this.wallSpriteClickHandlers = [
             [tv, ():void=>{console.log('Watch TV');}],
             [pizza, ():void=>{console.log('Eat junkfood');}],
-            [bookcase, ():void=>{console.log('Read a motherfucking book');}]
+            [bookcase, ():void=>{this.hero.play('reading');}]
         ];
     }
 
@@ -99,7 +99,7 @@ export default class Room extends Phaser.State {
     private walkSpriteTowardsPoint(sprite: Phaser.Sprite, point: Phaser.Point): Phaser.Tween {
         const xDiff = sprite.x - point.x;
         const xDistance = Math.abs(xDiff);
-        const duration: number = (xDistance / 200) * 1000;
+        const duration: number = (xDistance / 2000) * 1000;
 
         if (xDiff > 0) {
             sprite.scale.x = -Math.abs(sprite.scale.x);
