@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import Humanoid from './Humanoid';
 import Point = Phaser.Point;
 import SpriteFactory from "./SpriteFactory";
+import Actions from "./Actions";
 
 type wallSpriteClickHandler = [Phaser.Sprite, ()=>void];
 export default class Room extends Phaser.State {
@@ -11,6 +12,11 @@ export default class Room extends Phaser.State {
     audio: Phaser.AudioSprite;
     wallSpriteClickHandlers: Array<wallSpriteClickHandler>;
     activeWallSprite: Phaser.Sprite;
+
+    private static getXDistance(from: Phaser.Point, to: Phaser.Point):number{
+        const xDiff = from.x - to.x;
+        return Math.abs(xDiff);
+    }
 
     preload() {
         this.load.atlasJSONHash('sprites', 'img/sprite.png', 'img/sprite.json');
@@ -40,8 +46,13 @@ export default class Room extends Phaser.State {
             sprite.inputEnabled = true;
             sprite.events.onInputDown.add(room.handleWallSpriteClick, room);
         });
+        // When the user clicks anywhere but the TV, the TV should shutdown
+        // Must find a more scaleable way to do it at some point...
+        [pizza,bookcase,girl,bg].forEach((sprite: Phaser.Sprite)=>{
+            sprite.events.onInputDown.add(()=>{Actions.shutDownTv(tv);});
+        });
         this.wallSpriteClickHandlers = [
-            [tv, ():void=>{console.log('Watch TV');}],
+            [tv, ():void=>{Actions.watchTv(this.hero, tv);}],
             [pizza, ():void=>{console.log('Eat junkfood');}],
             [bookcase, ():void=>{this.hero.play('reading');}]
         ];
@@ -74,12 +85,15 @@ export default class Room extends Phaser.State {
         if (!this.hero.body.onFloor()) {
             return;
         }
+
         this.activeWallSprite = wallSprite;
         const hero = this.hero;
         const audio = this.audio;
         this.cancelWalkingTween();
 
         this.game.debug.spriteBounds(wallSprite);
+
+
         this.walkingTween = this.walkSpriteTowardsPoint(
             this.hero,
             new Point(wallSprite.position.x + wallSprite.width / 2, wallSprite.position.y)
@@ -92,13 +106,15 @@ export default class Room extends Phaser.State {
                 hero.jump();
             });
         } else {
-            this.runWallSpriteClickHandler();
+            this.walkingTween.onComplete.add(() => {
+                this.runWallSpriteClickHandler();
+            });
         }
     }
 
     private walkSpriteTowardsPoint(sprite: Phaser.Sprite, point: Phaser.Point): Phaser.Tween {
         const xDiff = sprite.x - point.x;
-        const xDistance = Math.abs(xDiff);
+        const xDistance = Room.getXDistance(sprite.position, point);
         const duration: number = (xDistance / 2000) * 1000;
 
         if (xDiff > 0) {

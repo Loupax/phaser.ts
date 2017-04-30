@@ -18,6 +18,7 @@ export default class SpriteFactory {
         hero.animations.add('idle', ['blue_square_guy_0', 'blue_square_guy_1'], 0.5, true);
         hero.animations.add('walk', ['blue_square_guy_0', 'blue_square_guy_1'], 8, true);
         hero.animations.add('reading', ['blue_square_guy_reading_0', 'blue_square_guy_reading_1'], 2, true);
+        hero.animations.add('sitting_back', ['blue_square_guy_sitting_back_0'],1,false);
         this.game.add.existing(hero);
         this.setUpHeroPhysics(hero);
         return hero;
@@ -34,9 +35,56 @@ export default class SpriteFactory {
     }
 
     tv(x: number, y: number): Phaser.Sprite {
-        const tv = this.game.add.sprite(x, y, 'sprites', 'square_tv_screen');
+        const tv = this.game.add.sprite(x, y, 'sprites', 'tv_off');
         tv.width = 320;
         tv.height = 320;
+
+        tv.animations.add(
+            'off',
+            ['tv_off'],
+            1,
+            false
+        );
+
+        tv.animations.add(
+            'starting', [
+                'tv_starting_0',
+                'tv_starting_1',
+                'tv_starting_2',
+                'tv_starting_3',
+                'tv_starting_4',
+                'tv_starting_5',
+                'tv_starting_6',
+            ],
+            8,
+            false
+        );
+
+        tv.animations.add(
+            'shutting_down', [
+                'tv_starting_6',
+                'tv_starting_5',
+                'tv_starting_4',
+                'tv_starting_3',
+                'tv_starting_2',
+                'tv_starting_1',
+                'tv_starting_0',
+            ],
+            16,
+            false
+        );
+
+        tv.animations.add(
+            'playing',
+            [
+                'tv_playing_0',
+                'tv_playing_1'
+            ],
+            8,
+            true
+        );
+
+        tv.animations.play('off');
         return tv;
     }
 
