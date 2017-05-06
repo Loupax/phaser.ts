@@ -81,10 +81,7 @@ function ts_compile() {
         packageCache: {}
     })
         .plugin(tsify)
-        .transform('babelify', {
-            presets: ['es2015'],
-            extensions: ['.ts']
-        })
+        .transform('babelify')
         .bundle()
         .on('error', function (error) {
             console.error(error.toString());

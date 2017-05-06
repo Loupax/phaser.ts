@@ -1,5 +1,5 @@
-interface JumperInterface{
-    justReachedJumpPeak():boolean;
-    isJumping():boolean;
-    jump():void;
+interface JumperInterface {
+    justReachedJumpPeak(): boolean;
+    isJumping(): boolean;
+    jump(): void;
 }

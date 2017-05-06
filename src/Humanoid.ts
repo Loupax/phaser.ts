@@ -1,4 +1,4 @@
-import * as Phaser from 'phaser';
+import * as Phaser from "phaser";
 
 export default class Humanoid extends Phaser.Sprite implements AffectedByGravityInterface, JumperInterface {
     private _isFalling = false;
@@ -19,7 +19,7 @@ export default class Humanoid extends Phaser.Sprite implements AffectedByGravity
         this.handleJumpPeakDetection();
     }
 
-    jump(){
+    jump() {
         this.body.velocity.y = -2000;
         this._isJumping = true;
     }

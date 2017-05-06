@@ -1,4 +1,4 @@
 interface AffectedByGravityInterface {
     isFalling(): boolean;
-    justTouchedTheFloor():boolean;
+    justTouchedTheFloor(): boolean;
 }

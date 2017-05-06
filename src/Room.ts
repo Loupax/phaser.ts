@@ -1,10 +1,13 @@
-import * as Phaser from 'phaser';
-import Humanoid from './Humanoid';
-import Point = Phaser.Point;
+import * as Phaser from "phaser";
+import Humanoid from "./Humanoid";
 import SpriteFactory from "./SpriteFactory";
 import Actions from "./Actions";
+import GameState from "./GameState";
+import FulfillmentBlock from "./FulfillmentBlock";
+import {FulfillmentBarSprite} from "./FulfillmentBarSprite";
+import Point = Phaser.Point;
 
-type wallSpriteClickHandler = [Phaser.Sprite, ()=>void];
+type wallSpriteClickHandler = [Phaser.Sprite, (what: Phaser.Sprite) => void];
 export default class Room extends Phaser.State {
 
     walkingTween: Phaser.Tween;
@@ -12,29 +15,57 @@ export default class Room extends Phaser.State {
     audio: Phaser.AudioSprite;
     wallSpriteClickHandlers: Array<wallSpriteClickHandler>;
     activeWallSprite: Phaser.Sprite;
+    gameState: GameState;
 
-    private static getXDistance(from: Phaser.Point, to: Phaser.Point):number{
+    private static getXDistance(from: Phaser.Point, to: Phaser.Point): number {
         const xDiff = from.x - to.x;
         return Math.abs(xDiff);
     }
 
+    init() {
+        const fulfillment: Array<FulfillmentBlock> = [];
+        for (let i = 0; i < 4; i++) {
+            fulfillment.push(new FulfillmentBlock(10));
+        }
+        this.gameState = new GameState(10, fulfillment);
+    }
+
     preload() {
         this.load.atlasJSONHash('sprites', 'img/sprite.png', 'img/sprite.json');
-        this.load.audiosprite('sfx', ['snd/sprite.ogg', 'snd/sprite.m4a', 'snd/sprite.ac3', 'snd/sprite.mp4'], 'snd/sprite.json');
+        this.load.audiosprite('sfx',
+            [
+                'snd/sprite.mp3',
+                'snd/sprite.ogg',
+                'snd/sprite.m4a',
+                'snd/sprite.ac3',
+            ],
+            'snd/sprite.json'
+        );
     }
 
     create() {
         this.stage.backgroundColor = "#4488AA";
         this.audio = this.add.audioSprite('sfx');
         const factory = new SpriteFactory(this.game);
-        const room = this;
         const bg = factory.transparentBg();
+
+        const wallObjects = this.add.group();
+
         const pizza = factory.pizza(0, 0);
         const bookcase = factory.bookcase(320, 0);
+
         const tv = factory.tv(320, 320);
         const girl = factory.girl(4, 589);
         this.hero = factory.hero(250, 589);
 
+        wallObjects.inputEnableChildren = true;
+        wallObjects.onChildInputDown.add(this.handleWallSpriteClick, this);
+        wallObjects.addMultiple([pizza, bookcase, tv]);
+
+        const group = this.add.existing(new FulfillmentBarSprite(this.game));
+        group.x = 0;
+        group.y = 0;
+        group.init(this.gameState.getFulfillment(), this.gameState.getMaxFulfillment());
 
         this.physics.startSystem(Phaser.Physics.ARCADE);
         this.physics.arcade.gravity.y = 2000;
@@ -42,20 +73,45 @@ export default class Room extends Phaser.State {
 
         girl.events.onInputDown.add(this.handleActorClick, this);
         bg.events.onInputDown.add(this.walk, this);
-        [pizza, tv, bookcase].forEach((sprite: Phaser.Sprite) => {
-            sprite.inputEnabled = true;
-            sprite.events.onInputDown.add(room.handleWallSpriteClick, room);
-        });
+
         // When the user clicks anywhere but the TV, the TV should shutdown
         // Must find a more scaleable way to do it at some point...
-        [pizza,bookcase,girl,bg].forEach((sprite: Phaser.Sprite)=>{
-            sprite.events.onInputDown.add(()=>{Actions.shutDownTv(tv);});
+        [pizza, bookcase, girl, bg].forEach((sprite: Phaser.Sprite) => {
+            sprite.events.onInputDown.add(() => {
+                Actions.shutDownTv(tv);
+            });
         });
         this.wallSpriteClickHandlers = [
-            [tv, ():void=>{Actions.watchTv(this.hero, tv);}],
-            [pizza, ():void=>{console.log('Eat junkfood');}],
-            [bookcase, ():void=>{this.hero.play('reading');}]
+            [tv, (tv): void => {
+                Actions.watchTv(this.hero, tv, this.gameState);
+            }],
+            [pizza, (pizza): void => {
+                Actions.feed(this.hero, this.gameState);
+            }],
+            [bookcase, (bookcase): void => {
+                Actions.readABook(this.hero, this.gameState);
+            }]
         ];
+
+        this.game.time.events.loop(Phaser.Timer.SECOND * 1000, this.timeMarchesByFor, this.gameState);
+
+        this.game.onPause.add(this.onPause, this.gameState);
+        this.game.onResume.add(this.onResume, this.gameState);
+    }
+
+    timeMarchesByFor(this: GameState): void {
+        this.consumeFulfillment();
+    }
+
+    onPause(this: GameState) {
+        this.timeOfMostRecentPause = new Date();
+        console.log('Paused!');
+    }
+
+    onResume(this: GameState) {
+        const now = new Date();
+        this.toConsumeOnNextCycle = (now.getTime() - this.timeOfMostRecentPause.getTime()) / 1000;
+        console.log('Unpaused after ' + this.toConsumeOnNextCycle + ' seconds');
     }
 
     update() {
@@ -63,7 +119,7 @@ export default class Room extends Phaser.State {
             this.audio.play('land');
         }
 
-        if(this.hero.isJumping() && this.hero.justReachedJumpPeak()){
+        if (this.hero.isJumping() && this.hero.justReachedJumpPeak()) {
             this.runWallSpriteClickHandler();
         }
     }
@@ -75,10 +131,12 @@ export default class Room extends Phaser.State {
         //this.game.debug.body(this.getRoomLayer());
     }
 
-    private runWallSpriteClickHandler():void{
-        this.wallSpriteClickHandlers.filter((tuple: wallSpriteClickHandler):boolean=>{
+    private runWallSpriteClickHandler(): void {
+        const tuple = this.wallSpriteClickHandlers.filter((tuple: wallSpriteClickHandler): boolean => {
             return tuple[0] === this.activeWallSprite;
-        }).pop()[1]();
+        }).pop();
+
+        tuple[1](tuple[0]);
     }
 
     private handleWallSpriteClick(this: Room, wallSprite: Phaser.Sprite) {
