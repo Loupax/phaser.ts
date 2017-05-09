@@ -1,5 +1,9 @@
 import Humanoid from "./Humanoid";
+import Hero from "./Actors/Hero";
 import zeroFill = require("zero-fill");
+import Tv from "./Objects/Tv";
+import Bookcase from "./Objects/Bookcase";
+import Pizza from "./Objects/Pizza";
 
 export default class SpriteFactory {
     game: Phaser.Game;
@@ -9,26 +13,9 @@ export default class SpriteFactory {
     }
 
     hero(x: number, y: number): Humanoid {
-        const hero = new Humanoid(this.game, x, y, 'sprites', 'blue_square_guy_0');
-        hero.name = 'hero';
-
+        const hero = Hero.make(this.game,x,y);
         hero.width = hero.height = 150;
-
         hero.anchor.set(0.5);
-
-
-        hero.animations.add('idle', ['blue_square_guy_0', 'blue_square_guy_1'], 0.5, true);
-        hero.animations.add('walk', ['blue_square_guy_0', 'blue_square_guy_1'], 8, true);
-        hero.animations.add('reading', ['blue_square_guy_reading_0', 'blue_square_guy_reading_1'], 2, true);
-        hero.animations.add('sitting_back', ['blue_square_guy_sitting_back_0'], 1, false);
-
-        const eatingFrames = [];
-        for (let idx = 0; idx < 19; idx++) {
-            eatingFrames.push(`blue_square_guy_eating_pizza_${zeroFill(2, idx)}`);
-        }
-        hero.animations.add('eat', eatingFrames, 10);
-        //console.log(eatingFrames);
-        this.game.add.existing(hero);
         this.setUpHeroPhysics(hero);
         return hero;
     }
@@ -44,61 +31,14 @@ export default class SpriteFactory {
     }
 
     tv(x: number, y: number): Phaser.Sprite {
-        const tv = this.game.add.sprite(x, y, 'sprites', 'tv_off');
+        const tv = Tv.make(this.game, x, y);
         tv.width = 320;
         tv.height = 320;
-
-        tv.animations.add(
-            'off',
-            ['tv_off'],
-            1,
-            false
-        );
-
-        tv.animations.add(
-            'starting', [
-                'tv_starting_0',
-                'tv_starting_1',
-                'tv_starting_2',
-                'tv_starting_3',
-                'tv_starting_4',
-                'tv_starting_5',
-                'tv_starting_6',
-            ],
-            8,
-            false
-        );
-
-        tv.animations.add(
-            'shutting_down', [
-                'tv_starting_6',
-                'tv_starting_5',
-                'tv_starting_4',
-                'tv_starting_3',
-                'tv_starting_2',
-                'tv_starting_1',
-                'tv_starting_0',
-            ],
-            16,
-            false
-        );
-
-        tv.animations.add(
-            'playing',
-            [
-                'tv_playing_0',
-                'tv_playing_1'
-            ],
-            8,
-            true
-        );
-
-        tv.animations.play('off');
         return tv;
     }
 
     bookcase(x: number, y: number): Phaser.Sprite {
-        const bookcase = this.game.add.sprite(x, y, 'sprites', 'bookcase_square');
+        const bookcase = Bookcase.make(this.game, x,y);
         bookcase.name = 'bookcase';
         bookcase.width = 320;
         bookcase.height = 320;
@@ -106,7 +46,7 @@ export default class SpriteFactory {
     }
 
     pizza(x: number, y: number): Phaser.Sprite {
-        const pizza = this.game.add.sprite(0, 0, 'sprites', 'framed_pizza');
+        const pizza = Pizza.make(this.game, x,y);
         pizza.width = pizza.height = 320;
         return pizza;
     }

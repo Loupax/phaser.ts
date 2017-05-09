@@ -1,19 +1,19 @@
 import * as Phaser from "phaser";
 import Humanoid from "./Humanoid";
 import SpriteFactory from "./SpriteFactory";
-import Actions from "./Actions";
+import Actions from "./Actions/Actions";
 import GameState from "./GameState";
 import FulfillmentBlock from "./FulfillmentBlock";
 import {FulfillmentBarSprite} from "./FulfillmentBarSprite";
 import Point = Phaser.Point;
 
-type wallSpriteClickHandler = [Phaser.Sprite, (what: Phaser.Sprite) => void];
+
 export default class Room extends Phaser.State {
 
     walkingTween: Phaser.Tween;
     hero: Humanoid;
     audio: Phaser.AudioSprite;
-    wallSpriteClickHandlers: Array<wallSpriteClickHandler>;
+    wallSpriteClickHandlers: Map<Phaser.Sprite, (what: Phaser.Sprite)=>void>;
     activeWallSprite: Phaser.Sprite;
     gameState: GameState;
 
@@ -81,17 +81,18 @@ export default class Room extends Phaser.State {
                 Actions.shutDownTv(tv);
             });
         });
-        this.wallSpriteClickHandlers = [
-            [tv, (tv): void => {
-                Actions.watchTv(this.hero, tv, this.gameState);
-            }],
-            [pizza, (pizza): void => {
-                Actions.feed(this.hero, this.gameState);
-            }],
-            [bookcase, (bookcase): void => {
-                Actions.readABook(this.hero, this.gameState);
-            }]
-        ];
+        this.wallSpriteClickHandlers = new Map<Phaser.Sprite, (what: Phaser.Sprite)=>void>();
+        this.wallSpriteClickHandlers.set(tv, (tv:Phaser.Sprite):void=>{
+            Actions.watchTv(this.hero, tv, this.gameState);
+        });
+
+        this.wallSpriteClickHandlers.set(pizza, (pizza:Phaser.Sprite):void=>{
+            Actions.feed(this.hero, this.gameState);
+        });
+
+        this.wallSpriteClickHandlers.set(bookcase, (bookcase:Phaser.Sprite):void=>{
+            Actions.readABook(this.hero, this.gameState);
+        });
 
         this.game.time.events.loop(Phaser.Timer.SECOND * 1000, this.timeMarchesByFor, this.gameState);
 
@@ -105,13 +106,11 @@ export default class Room extends Phaser.State {
 
     onPause(this: GameState) {
         this.timeOfMostRecentPause = new Date();
-        console.log('Paused!');
     }
 
     onResume(this: GameState) {
         const now = new Date();
         this.toConsumeOnNextCycle = (now.getTime() - this.timeOfMostRecentPause.getTime()) / 1000;
-        console.log('Unpaused after ' + this.toConsumeOnNextCycle + ' seconds');
     }
 
     update() {
@@ -132,11 +131,7 @@ export default class Room extends Phaser.State {
     }
 
     private runWallSpriteClickHandler(): void {
-        const tuple = this.wallSpriteClickHandlers.filter((tuple: wallSpriteClickHandler): boolean => {
-            return tuple[0] === this.activeWallSprite;
-        }).pop();
-
-        tuple[1](tuple[0]);
+        this.wallSpriteClickHandlers.get(this.activeWallSprite)(this.activeWallSprite);
     }
 
     private handleWallSpriteClick(this: Room, wallSprite: Phaser.Sprite) {

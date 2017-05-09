@@ -1,6 +1,8 @@
-import Humanoid from "./Humanoid";
-import GameState from "./GameState";
-import FulfillmentBlock from "./FulfillmentBlock";
+import Humanoid from "../Humanoid";
+import GameState from "../GameState";
+import FulfillmentBlock from "../FulfillmentBlock";
+
+
 class ActionHandler {
     private watchTvFulfillmentIncreaseLoop: Phaser.TimerEvent;
 
