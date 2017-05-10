@@ -3,6 +3,7 @@ import Humanoid from "./Humanoid";
 import SpriteFactory from "./SpriteFactory";
 import Actions from "./Actions/Actions";
 import GameState from "./GameState";
+import Tv from "./Objects/Tv";
 import FulfillmentBlock from "./FulfillmentBlock";
 import {FulfillmentBarSprite} from "./FulfillmentBarSprite";
 import Point = Phaser.Point;
@@ -13,9 +14,10 @@ export default class Room extends Phaser.State {
     walkingTween: Phaser.Tween;
     hero: Humanoid;
     audio: Phaser.AudioSprite;
-    wallSpriteClickHandlers: Map<Phaser.Sprite, (what: Phaser.Sprite)=>void>;
+    wallSpriteClickHandlers: Map<Phaser.Sprite, (what: Phaser.Sprite) => void>;
     activeWallSprite: Phaser.Sprite;
     gameState: GameState;
+    private fulfilmentBarSprite: FulfillmentBarSprite;
 
     private static getXDistance(from: Phaser.Point, to: Phaser.Point): number {
         const xDiff = from.x - to.x;
@@ -56,19 +58,22 @@ export default class Room extends Phaser.State {
 
         const tv = factory.tv(320, 320);
         const girl = factory.girl(4, 589);
+        girl.inputEnabled = true;
         this.hero = factory.hero(250, 589);
 
         wallObjects.inputEnableChildren = true;
         wallObjects.onChildInputDown.add(this.handleWallSpriteClick, this);
         wallObjects.addMultiple([pizza, bookcase, tv]);
+        this.fulfilmentBarSprite = new FulfillmentBarSprite(this.game);
 
-        const group = this.add.existing(new FulfillmentBarSprite(this.game));
+        const group = this.add.existing(this.fulfilmentBarSprite);
         group.x = 0;
         group.y = 0;
         group.init(this.gameState.getFulfillment(), this.gameState.getMaxFulfillment());
 
         this.physics.startSystem(Phaser.Physics.ARCADE);
-        this.physics.arcade.gravity.y = 2000;
+        this.physics.arcade.gravity.y = 0;
+        this.hero.body.gravity.y = 2000;
 
 
         girl.events.onInputDown.add(this.handleActorClick, this);
@@ -81,27 +86,59 @@ export default class Room extends Phaser.State {
                 Actions.shutDownTv(tv);
             });
         });
-        this.wallSpriteClickHandlers = new Map<Phaser.Sprite, (what: Phaser.Sprite)=>void>();
-        this.wallSpriteClickHandlers.set(tv, (tv:Phaser.Sprite):void=>{
+
+        // When the user clicks anywhere but the TV, the TV should shutdown
+        // Must find a more scaleable way to do it at some point...
+        [pizza, tv, girl, bg].forEach((sprite: Phaser.Sprite) => {
+            sprite.events.onInputDown.add(() => {
+                Actions.stopReading(this.hero);
+            });
+        });
+
+        this.wallSpriteClickHandlers = new Map<Phaser.Sprite, (what: Phaser.Sprite) => void>();
+        this.wallSpriteClickHandlers.set(tv, (tv: Tv): void => {
             Actions.watchTv(this.hero, tv, this.gameState);
         });
 
-        this.wallSpriteClickHandlers.set(pizza, (pizza:Phaser.Sprite):void=>{
+        this.wallSpriteClickHandlers.set(pizza, (pizza: Phaser.Sprite): void => {
             Actions.feed(this.hero, this.gameState);
         });
 
-        this.wallSpriteClickHandlers.set(bookcase, (bookcase:Phaser.Sprite):void=>{
+        this.wallSpriteClickHandlers.set(bookcase, (bookcase: Phaser.Sprite): void => {
             Actions.readABook(this.hero, this.gameState);
         });
 
-        this.game.time.events.loop(Phaser.Timer.SECOND * 1000, this.timeMarchesByFor, this.gameState);
+        girl.events.onInputDown.add(() => {
+            Actions.getIntimate(this.hero, this.gameState);
+        });
+
+        this.game.time.events.loop(Phaser.Timer.SECOND, this.timeMarchesByFor, this);
 
         this.game.onPause.add(this.onPause, this.gameState);
         this.game.onResume.add(this.onResume, this.gameState);
     }
 
-    timeMarchesByFor(this: GameState): void {
-        this.consumeFulfillment();
+    timeMarchesByFor(this: Room): void {
+        const consumed = this.gameState.consumeFulfillment();
+        const fontSize = 15;
+        const style = { font: `${fontSize}px Arial`, fill: "#ff0044" };
+
+        const text = this.game.add.text(0,0, `-${consumed}`, style);
+        text.anchor.setTo(0.5);
+        text.stroke = '#f00';
+        text.strokeThickness = 2;
+        text.fill = '#fff';
+
+        const textSprite = this.game.add.sprite((this.game.width * this.fulfilmentBarSprite.percentageFilled()) - fontSize/2, 0);
+        textSprite.addChild(text);
+
+        this.game.physics.enable(textSprite);
+        textSprite.body.gravity.y = 100;
+        textSprite.body.velocity.x = 10;
+
+        // this.game.time.events.add(Phaser.Timer.SECOND / 2, ()=>{
+        //
+        // }, this);
     }
 
     onPause(this: GameState) {
@@ -121,13 +158,6 @@ export default class Room extends Phaser.State {
         if (this.hero.isJumping() && this.hero.justReachedJumpPeak()) {
             this.runWallSpriteClickHandler();
         }
-    }
-
-    render() {
-        //this.game.debug.body(this.girl);
-        //this.game.debug.body(this.hero);
-        //this.game.debug.bodyInfo(this.getHero(),0,0);
-        //this.game.debug.body(this.getRoomLayer());
     }
 
     private runWallSpriteClickHandler(): void {

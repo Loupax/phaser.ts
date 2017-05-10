@@ -4,6 +4,7 @@ import zeroFill = require("zero-fill");
 import Tv from "./Objects/Tv";
 import Bookcase from "./Objects/Bookcase";
 import Pizza from "./Objects/Pizza";
+import Girl from "./Objects/Girl"
 
 export default class SpriteFactory {
     game: Phaser.Game;
@@ -21,8 +22,7 @@ export default class SpriteFactory {
     }
 
     girl(x: number, y: number): Humanoid {
-        const girl = new Humanoid(this.game, x, y, 'sprites', 'square_girl_0');
-        girl.inputEnabled = true;
+        const girl = Girl.make(this.game, x,y);
         girl.anchor.set(0.5);
         girl.width = girl.height = 150;
         this.game.add.existing(girl);

@@ -4,8 +4,8 @@ export default class Bookcase extends Phaser.Sprite implements InterractableInte
 
     public readonly action = ActionEnum.Reading;
 
-    public static make(game: Phaser.Game, x:number, y:number){
-
+    public static make(game: Phaser.Game, x:number, y:number):Bookcase
+    {
         return new Bookcase(game, x,y,'sprites','bookcase_square');
     }
 }

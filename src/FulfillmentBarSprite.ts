@@ -15,12 +15,14 @@ export class FulfillmentBarSprite extends Phaser.Group {
 
         const fgBmd = this.createHealthbarBitmapdata('#00ff00', this.game.width - 2, 20 - 2);
         this.fgColor = this.create(this.x + 1, this.y + 1, fgBmd);
+    }
 
-
+    percentageFilled():number{
+        return this.fulfillment.length / this.maxFulfillment;
     }
 
     update() {
-        this.fgColor.scale.x = this.fulfillment.length / this.maxFulfillment;
+        this.fgColor.scale.x = this.percentageFilled()
     }
 
     private createHealthbarBitmapdata(color: string, width: number, height: number): Phaser.BitmapData {

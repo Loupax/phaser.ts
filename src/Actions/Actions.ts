@@ -1,12 +1,15 @@
 import Humanoid from "../Humanoid";
 import GameState from "../GameState";
-import FulfillmentBlock from "../FulfillmentBlock";
+import Tv from "../Objects/Tv"
+import fulfilmentBlockValues from "../config/FulfilmentBlockValues";
+import ActionEnum from "../Actions/ActionEnum";
 
 
 class ActionHandler {
     private watchTvFulfillmentIncreaseLoop: Phaser.TimerEvent;
+    private readingFulfillmentIncreaseLoop: Phaser.TimerEvent;
 
-    watchTv(guy: Humanoid, tv: Phaser.Sprite, gameState: GameState) {
+    watchTv(guy: Humanoid, tv: Tv, gameState: GameState) {
         guy.play('sitting_back');
 
         if (tv.animations.currentAnim.name === 'off') {
@@ -14,7 +17,9 @@ class ActionHandler {
             tvStartup.onComplete.add(() => {
                 const watchTvAnimation = tv.play('playing');
                 this.watchTvFulfillmentIncreaseLoop = guy.game.time.events.loop(Phaser.Timer.SECOND, () => {
-                    gameState.addFulfillment(new FulfillmentBlock(1));
+                    if(fulfilmentBlockValues.isEmpty(tv.action) === false){
+                        gameState.addFulfillment(fulfilmentBlockValues.makeFulfilmentBlock(tv.action));
+                    }
                 });
             });
         }
@@ -22,12 +27,25 @@ class ActionHandler {
 
     feed(who: Humanoid, gameState: GameState) {
         who.play('eat');
-        gameState.addFulfillment(new FulfillmentBlock(5));
+        gameState.addFulfillment(fulfilmentBlockValues.makeFulfilmentBlock(ActionEnum.Pizza));
     }
 
     readABook(who: Humanoid, gameState: GameState) {
         const anim = who.play('reading');
-        gameState.addFulfillment(new FulfillmentBlock(10));
+
+        this.readingFulfillmentIncreaseLoop = who.game.time.events.loop(Phaser.Timer.SECOND, () => {
+            if(fulfilmentBlockValues.isEmpty(ActionEnum.Reading) === false){
+                gameState.addFulfillment(fulfilmentBlockValues.makeFulfilmentBlock(ActionEnum.Reading));
+            }
+        });
+    }
+
+    stopReading(who:Phaser.Sprite){
+        if (who.animations.currentAnim.name !== 'off') {
+
+
+            who.game.time.events.remove(this.readingFulfillmentIncreaseLoop);
+        }
     }
 
     shutDownTv(tv: Phaser.Sprite) {
@@ -38,6 +56,10 @@ class ActionHandler {
 
             tv.game.time.events.remove(this.watchTvFulfillmentIncreaseLoop);
         }
+    }
+
+    getIntimate(who: Phaser.Sprite, gameState:GameState){
+        gameState.addFulfillment(fulfilmentBlockValues.makeFulfilmentBlock(ActionEnum.Intimacy));
     }
 }
 

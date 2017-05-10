@@ -29,8 +29,9 @@ class GameState {
         }
     }
 
-    public consumeFulfillment() {
+    public consumeFulfillment():number {
         let howMuch = ~~this.toConsumeOnNextCycle + 1;
+        let fulfillmentConsumed = howMuch;
         this.toConsumeOnNextCycle = 0;
         while (this.fulfillment.length !== 0 && howMuch--) {
             const lastFulfillmentBlock = this.fulfillment[this.fulfillment.length - 1];
@@ -38,6 +39,7 @@ class GameState {
             this.clear();
         }
 
+        return fulfillmentConsumed;
     }
 
     private clear() {
