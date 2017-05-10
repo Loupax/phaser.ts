@@ -5,7 +5,7 @@ export default class Tv extends Phaser.Sprite implements InterractableInterface{
     public readonly action = ActionEnum.VideoGames;
 
     public static make(game: Phaser.Game, x:number, y:number){
-        const tv = game.add.sprite(x, y, 'sprites', 'tv_off');
+        const tv = new Tv(game, x, y, 'sprites', 'tv_off');
 
         tv.animations.add(
             'off',
