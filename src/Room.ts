@@ -121,15 +121,15 @@ export default class Room extends Phaser.State {
     timeMarchesByFor(this: Room): void {
         const consumed = this.gameState.consumeFulfillment();
         const fontSize = 15;
-        const style = { font: `${fontSize}px Arial`, fill: "#ff0044" };
+        const style = {font: `${fontSize}px Arial`, fill: "#ff0044"};
 
-        const text = this.game.add.text(0,0, `-${consumed}`, style);
+        const text = this.game.add.text(0, 0, `-${consumed}`, style);
         text.anchor.setTo(0.5);
         text.stroke = '#f00';
         text.strokeThickness = 2;
         text.fill = '#fff';
 
-        const textSprite = this.game.add.sprite((this.game.width * this.fulfilmentBarSprite.percentageFilled()) - fontSize/2, 0);
+        const textSprite = this.game.add.sprite((this.game.width * this.fulfilmentBarSprite.percentageFilled()) - fontSize / 2, 0);
         textSprite.addChild(text);
 
         this.game.physics.enable(textSprite);

@@ -17,7 +17,7 @@ export class FulfillmentBarSprite extends Phaser.Group {
         this.fgColor = this.create(this.x + 1, this.y + 1, fgBmd);
     }
 
-    percentageFilled():number{
+    percentageFilled(): number {
         return this.fulfillment.length / this.maxFulfillment;
     }
 

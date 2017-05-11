@@ -1,11 +1,10 @@
 import ActionEnum from "../Actions/ActionEnum";
 import InterractableInterface from "../Interfaces/InterractableInterface";
-export default class Tv extends Phaser.Sprite implements InterractableInterface{
+export default class Tv extends Phaser.Sprite implements InterractableInterface {
 
     public readonly action = ActionEnum.VideoGames;
 
-    public static make(game: Phaser.Game, x:number, y:number)
-    {
+    public static make(game: Phaser.Game, x: number, y: number) {
         const tv = new Tv(game, x, y, 'sprites', 'tv_off');
 
         tv.animations.add(

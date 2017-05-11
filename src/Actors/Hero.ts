@@ -1,9 +1,8 @@
 import Humanoid from "../Humanoid";
 import zeroFill = require("zero-fill");
 
-export default class Hero extends Humanoid
-{
-    public static make(game:Phaser.Game, x:number, y:number){
+export default class Hero extends Humanoid {
+    public static make(game: Phaser.Game, x: number, y: number) {
         const hero = new Humanoid(game, x, y, 'sprites', 'blue_square_guy_0');
         hero.name = 'hero';
 

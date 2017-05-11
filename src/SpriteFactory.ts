@@ -1,10 +1,10 @@
 import Humanoid from "./Humanoid";
 import Hero from "./Actors/Hero";
-import zeroFill = require("zero-fill");
 import Tv from "./Objects/Tv";
 import Bookcase from "./Objects/Bookcase";
 import Pizza from "./Objects/Pizza";
-import Girl from "./Objects/Girl"
+import Girl from "./Objects/Girl";
+import zeroFill = require("zero-fill");
 
 export default class SpriteFactory {
     game: Phaser.Game;
@@ -14,7 +14,7 @@ export default class SpriteFactory {
     }
 
     hero(x: number, y: number): Humanoid {
-        const hero = Hero.make(this.game,x,y);
+        const hero = Hero.make(this.game, x, y);
         hero.width = hero.height = 150;
         hero.anchor.set(0.5);
         this.setUpHeroPhysics(hero);
@@ -22,7 +22,7 @@ export default class SpriteFactory {
     }
 
     girl(x: number, y: number): Humanoid {
-        const girl = Girl.make(this.game, x,y);
+        const girl = Girl.make(this.game, x, y);
         girl.anchor.set(0.5);
         girl.width = girl.height = 150;
         this.game.add.existing(girl);
@@ -38,7 +38,7 @@ export default class SpriteFactory {
     }
 
     bookcase(x: number, y: number): Phaser.Sprite {
-        const bookcase = Bookcase.make(this.game, x,y);
+        const bookcase = Bookcase.make(this.game, x, y);
         bookcase.name = 'bookcase';
         bookcase.width = 320;
         bookcase.height = 320;
@@ -46,7 +46,7 @@ export default class SpriteFactory {
     }
 
     pizza(x: number, y: number): Phaser.Sprite {
-        const pizza = Pizza.make(this.game, x,y);
+        const pizza = Pizza.make(this.game, x, y);
         pizza.width = pizza.height = 320;
         return pizza;
     }

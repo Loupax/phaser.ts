@@ -1,7 +1,6 @@
 import Humanoid from "../Humanoid";
 import GameState from "../GameState";
-import Tv from "../Objects/Tv"
-import fulfilmentBlockValues from "../config/FulfilmentBlockValues";
+import Tv from "../Objects/Tv";
 import ActionEnum from "../Actions/ActionEnum";
 
 
@@ -17,9 +16,9 @@ class ActionHandler {
             tvStartup.onComplete.add(() => {
                 const watchTvAnimation = tv.play('playing');
                 this.watchTvFulfillmentIncreaseLoop = guy.game.time.events.loop(Phaser.Timer.SECOND, () => {
-                    if(fulfilmentBlockValues.isEmpty(tv.action) === false){
-                        gameState.addFulfillment(fulfilmentBlockValues.makeFulfilmentBlock(tv.action));
-                    }
+
+                    gameState.addFulfillment(tv.action);
+
                 });
             });
         }
@@ -27,23 +26,21 @@ class ActionHandler {
 
     feed(who: Humanoid, gameState: GameState) {
         who.play('eat');
-        gameState.addFulfillment(fulfilmentBlockValues.makeFulfilmentBlock(ActionEnum.Pizza));
+        gameState.addFulfillment(ActionEnum.Pizza);
     }
 
     readABook(who: Humanoid, gameState: GameState) {
         const anim = who.play('reading');
 
         this.readingFulfillmentIncreaseLoop = who.game.time.events.loop(Phaser.Timer.SECOND, () => {
-            if(fulfilmentBlockValues.isEmpty(ActionEnum.Reading) === false){
-                gameState.addFulfillment(fulfilmentBlockValues.makeFulfilmentBlock(ActionEnum.Reading));
-            }
+
+            gameState.addFulfillment(ActionEnum.Reading);
+
         });
     }
 
-    stopReading(who:Phaser.Sprite){
+    stopReading(who: Phaser.Sprite) {
         if (who.animations.currentAnim.name !== 'off') {
-
-
             who.game.time.events.remove(this.readingFulfillmentIncreaseLoop);
         }
     }
@@ -58,8 +55,8 @@ class ActionHandler {
         }
     }
 
-    getIntimate(who: Phaser.Sprite, gameState:GameState){
-        gameState.addFulfillment(fulfilmentBlockValues.makeFulfilmentBlock(ActionEnum.Intimacy));
+    getIntimate(who: Phaser.Sprite, gameState: GameState) {
+        gameState.addFulfillment(ActionEnum.Intimacy);
     }
 }
 
