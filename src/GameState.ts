@@ -57,7 +57,6 @@ class GameState{
     }
 
     public pause(){
-        console.log('Pause called!');
         this.timeOfMostRecentPause = new Date();
     }
 
@@ -84,7 +83,6 @@ class GameState{
             this.maxDailyFulfillmentBlocks--;
             const block = this.fulfillmentHandler.makeFulfilmentBlock(action);
             this.fulfillment.push(block);
-            console.log('Here');
         }
     }
 

@@ -107,9 +107,10 @@ export default class Room extends Phaser.State {
             Actions.getIntimate(this.hero, this.gameState);
         });
 
+        // Handle loading before setting the timer.
+        this.onResume();
         this.game.time.events.loop(Phaser.Timer.SECOND, this.timeMarchesByFor, this);
 
-        this.onResume();
         this.game.onPause.add(this.onPause, this);
         this.game.onResume.add(this.onResume, this);
     }
@@ -136,8 +137,10 @@ export default class Room extends Phaser.State {
     }
 
     onPause() {
+        // Gamestate Pause must be called at the beggining of the handler so that any changes
+        // made by the gamestate.pause method are also saved in localstorage
         this.gameState.pause();
-        //this.save();
+
         const saveObject = this.gameState.serialize();
         localStorage.setItem('save', JSON.stringify({
             gameState:saveObject,
@@ -150,6 +153,7 @@ export default class Room extends Phaser.State {
 
     onResume() {
         if(localStorage.getItem('save') === null){
+            this.gameState.resume();
             return;
         }
 
@@ -158,9 +162,14 @@ export default class Room extends Phaser.State {
         this.gameState.unserialize(savedObject.gameState);
         this.hero.x = savedObject.hero.x;
         this.hero.y = savedObject.hero.y;
+
+        // On the other hand gameState.resume() must run at the end of the resume handler so that
+        // it takes the loaded data into account
+        this.gameState.resume();
     }
 
     update() {
+
         if (this.hero.justTouchedTheFloor()) {
             this.audio.play('land');
         }
@@ -264,7 +273,6 @@ export default class Room extends Phaser.State {
 
         function onDragStop(sprite: Phaser.Sprite, pointer: Phaser.Pointer) {
             changes[sprite.name] = sprite.position;
-            console.log(changes);
         }
     }
 }
