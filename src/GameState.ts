@@ -1,26 +1,69 @@
 import FulfillmentBlock from "./FulfillmentBlock";
 import * as inPlace from "in-place";
 import ActionEnum from "./Actions/ActionEnum";
-
-class GameState {
+type SaveObject = {
+    fulfillment: Array<{life: number}>;
+    timeOfMostRecentPause: Date;
+    maxDailyFulfillmentBlocks: number;
+}
+class GameState{
     public toConsumeOnNextCycle = 1;
-    public timeOfMostRecentPause?: Date;
-    private fulfillment: Array<FulfillmentBlock>;
+    private timeOfMostRecentPause?: Date;
+    private readonly fulfillment: Array<FulfillmentBlock>;
     private maxFulfillment: number;
+    private maxDailyFulfillmentBlocks = 10;
     private fulfillmentHandler: FulfilmentBlockHandler;
+    private readonly fulfilmentBlockValues: Map<ActionEnum, Array<number>>;
 
     constructor(maxFulfillment: number, fulFillment: Array<FulfillmentBlock>) {
         this.maxFulfillment = maxFulfillment;
         this.fulfillment = fulFillment;
 
-        const fulfilmentBlockValues = new Map<ActionEnum, Array<number>>();
+        this.fulfilmentBlockValues = new Map<ActionEnum, Array<number>>();
 
-        fulfilmentBlockValues.set(ActionEnum.Pizza, [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]);
-        fulfilmentBlockValues.set(ActionEnum.VideoGames, [20, 20, 20, 8, 7, 6, 5, 5, 5, 4]);
-        fulfilmentBlockValues.set(ActionEnum.Reading, [10, 20, 50, 4, 3, 3, 3, 3, 2, 2]);
-        fulfilmentBlockValues.set(ActionEnum.Intimacy, [20, 10, 20, 10, 20, 10, 5, 3, 1, 1]);
+        this.fulfilmentBlockValues.set(ActionEnum.Pizza, [10, 10, 10, 10, 10, 10, 10, 10, 10, 10].map((item:number)=>{return item * 270;}));
+        this.fulfilmentBlockValues.set(ActionEnum.VideoGames, [20, 20, 20, 8, 7, 6, 5, 5, 5, 4].map((item:number)=>{return item * 270;}));
+        this.fulfilmentBlockValues.set(ActionEnum.Reading, [10, 20, 50, 4, 3, 3, 3, 3, 2, 2].map((item:number)=>{return item * 270;}));
+        this.fulfilmentBlockValues.set(ActionEnum.Intimacy, [20, 10, 20, 10, 20, 10, 5, 3, 1, 1].map((item:number)=>{return item * 270;}));
 
-        this.fulfillmentHandler = new FulfilmentBlockHandler(fulfilmentBlockValues);
+        this.fulfillmentHandler = new FulfilmentBlockHandler(this.fulfilmentBlockValues);
+    }
+
+    public serialize(): SaveObject{
+        const saveObject:SaveObject = {
+            fulfillment: [],
+            timeOfMostRecentPause: this.timeOfMostRecentPause,
+            maxDailyFulfillmentBlocks: this.maxDailyFulfillmentBlocks
+        };
+
+        this.fulfillment.forEach((val:FulfillmentBlock, key)=>{
+            saveObject.fulfillment.push({life: val.life});
+        });
+        return saveObject;
+    }
+
+    public unserialize(savedObject: SaveObject){
+        this.fulfillment.length = 0;
+        savedObject.fulfillment.forEach((block:any)=>{
+            this.fulfillment.push(new FulfillmentBlock(block.life));
+        });
+        this.timeOfMostRecentPause = new Date(savedObject.timeOfMostRecentPause);
+        this.maxDailyFulfillmentBlocks = savedObject.maxDailyFulfillmentBlocks;
+
+    }
+
+    public doneForToday(){
+        return this.maxDailyFulfillmentBlocks === 0;
+    }
+
+    public pause(){
+        console.log('Pause called!');
+        this.timeOfMostRecentPause = new Date();
+    }
+
+    public resume(){
+        const now = new Date();
+        this.toConsumeOnNextCycle = (now.getTime() - this.timeOfMostRecentPause.getTime()) / 1000;
     }
 
     public getFulfillment(): Array<FulfillmentBlock> {
@@ -32,8 +75,13 @@ class GameState {
     }
 
     public addFulfillment(action: ActionEnum): void {
-        console.log('Adding fulfillment out of', action);
+
+        if (this.maxDailyFulfillmentBlocks === 0) {
+            return;
+        }
+
         if (!this.fulfillmentHandler.isEmpty(action) && (this.fulfillment.length < this.maxFulfillment)) {
+            this.maxDailyFulfillmentBlocks--;
             const block = this.fulfillmentHandler.makeFulfilmentBlock(action);
             this.fulfillment.push(block);
             console.log('Here');
@@ -41,6 +89,10 @@ class GameState {
     }
 
     public consumeFulfillment(): number {
+        if (this.fulfillment.length === 0) {
+            return 0;
+        }
+
         let howMuch = ~~this.toConsumeOnNextCycle + 1;
         let fulfillmentConsumed = howMuch;
         this.toConsumeOnNextCycle = 0;

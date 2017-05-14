@@ -1,6 +1,10 @@
+type SaveObject = {
+    life: number
+}
+
 export default class FulfillmentBlock {
 
-    private life: number;
+    public life: number;
 
     constructor(life: number) {
         this.life = life;

@@ -30,14 +30,14 @@ export default class SpriteFactory {
         return girl;
     }
 
-    tv(x: number, y: number): Phaser.Sprite {
+    tv(x: number, y: number): Tv {
         const tv = Tv.make(this.game, x, y);
         tv.width = 320;
         tv.height = 320;
         return tv;
     }
 
-    bookcase(x: number, y: number): Phaser.Sprite {
+    bookcase(x: number, y: number): Bookcase {
         const bookcase = Bookcase.make(this.game, x, y);
         bookcase.name = 'bookcase';
         bookcase.width = 320;

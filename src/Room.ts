@@ -4,7 +4,6 @@ import SpriteFactory from "./SpriteFactory";
 import Actions from "./Actions/Actions";
 import GameState from "./GameState";
 import Tv from "./Objects/Tv";
-import FulfillmentBlock from "./FulfillmentBlock";
 import {FulfillmentBarSprite} from "./FulfillmentBarSprite";
 import Point = Phaser.Point;
 
@@ -25,11 +24,7 @@ export default class Room extends Phaser.State {
     }
 
     init() {
-        const fulfillment: Array<FulfillmentBlock> = [];
-        for (let i = 0; i < 4; i++) {
-            fulfillment.push(new FulfillmentBlock(10));
-        }
-        this.gameState = new GameState(10, fulfillment);
+        this.gameState = new GameState(10, []);
     }
 
     preload() {
@@ -114,8 +109,9 @@ export default class Room extends Phaser.State {
 
         this.game.time.events.loop(Phaser.Timer.SECOND, this.timeMarchesByFor, this);
 
-        this.game.onPause.add(this.onPause, this.gameState);
-        this.game.onResume.add(this.onResume, this.gameState);
+        this.onResume();
+        this.game.onPause.add(this.onPause, this);
+        this.game.onResume.add(this.onResume, this);
     }
 
     timeMarchesByFor(this: Room): void {
@@ -123,31 +119,45 @@ export default class Room extends Phaser.State {
         const fontSize = 15;
         const style = {font: `${fontSize}px Arial`, fill: "#ff0044"};
 
-        const text = this.game.add.text(0, 0, `-${consumed}`, style);
-        text.anchor.setTo(0.5);
-        text.stroke = '#f00';
-        text.strokeThickness = 2;
-        text.fill = '#fff';
+        if (consumed > 0) {
+            const text = this.game.add.text(0, 0, `-${consumed}`, style);
+            text.anchor.setTo(0.5);
+            text.stroke = '#f00';
+            text.strokeThickness = 2;
+            text.fill = '#fff';
 
-        const textSprite = this.game.add.sprite((this.game.width * this.fulfilmentBarSprite.percentageFilled()) - fontSize / 2, 0);
-        textSprite.addChild(text);
+            const textSprite = this.game.add.sprite((this.game.width * this.fulfilmentBarSprite.percentageFilled()) - fontSize / 2, 0);
+            textSprite.addChild(text);
 
-        this.game.physics.enable(textSprite);
-        textSprite.body.gravity.y = 100;
-        textSprite.body.velocity.x = 10;
-
-        // this.game.time.events.add(Phaser.Timer.SECOND / 2, ()=>{
-        //
-        // }, this);
+            this.game.physics.enable(textSprite);
+            textSprite.body.gravity.y = 100;
+            textSprite.body.velocity.x = 10;
+        }
     }
 
-    onPause(this: GameState) {
-        this.timeOfMostRecentPause = new Date();
+    onPause() {
+        this.gameState.pause();
+        //this.save();
+        const saveObject = this.gameState.serialize();
+        localStorage.setItem('save', JSON.stringify({
+            gameState:saveObject,
+            hero: {
+                x: this.hero.x,
+                y: this.hero.y,
+            }
+        }));
     }
 
-    onResume(this: GameState) {
-        const now = new Date();
-        this.toConsumeOnNextCycle = (now.getTime() - this.timeOfMostRecentPause.getTime()) / 1000;
+    onResume() {
+        if(localStorage.getItem('save') === null){
+            return;
+        }
+
+        const savedObject = JSON.parse(localStorage.getItem('save'));
+
+        this.gameState.unserialize(savedObject.gameState);
+        this.hero.x = savedObject.hero.x;
+        this.hero.y = savedObject.hero.y;
     }
 
     update() {
